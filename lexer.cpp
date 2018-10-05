@@ -55,7 +55,7 @@ void Lexer::commentCase(ifstream& inputFile) {
 			input = inputFile.get();
 			comment << input;
 		}
-		addToken(Token::TOKEN_TYPE[Token::COMMENT], comment.str(), numLine);
+		//addToken(Token::TOKEN_TYPE[Token::COMMENT], comment.str(), numLine);
 	}
 }
 
@@ -69,7 +69,7 @@ void Lexer::multiCommentCase(ifstream& inputFile) {
 			comment << input;
 			input = inputFile.get();
 			comment << input;
-			addToken(Token::TOKEN_TYPE[Token::COMMENT], comment.str(), startLine);
+			//addToken(Token::TOKEN_TYPE[Token::COMMENT], comment.str(), startLine);
 			return;
 		}
 		comment << input;

@@ -1,22 +1,36 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "lexer.h"
+#include "parser.h"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
-	//OPEN FILES
+
+	//OPEN FILE/CHECK ERRORS
 	ifstream in(argv[1]);
-	//ofstream out(argv[2]);
+	//ofstream out(argv[2]); //uncomment this to use an output file
 
-	Lexer lex;
-	lex.scan(in);
+	Lexer myLexer;
+	Parser myParser;
 
-	cout << lex.printTokens() << "Total Tokens = " << lex.getNumTokens();
+	myLexer.scan(in);
+
+	try {
+		myParser.parse(myLexer.getTokens());
+		cout << myParser.toString();
+	}
+	catch (int error) {
+		stringstream errorStream;
+		errorStream << "Failure!" << endl << "  " << myLexer.getTokens()[error].toString() << endl;
+		cout << errorStream.str();
+
+		in.close();
+		//out.close(); //uncomment this and to use output file
+		return 0;
+	}
 
 	in.close();
-	//out.close();
-
+	//out.close(); //uncomment this to use output file and change all couts to outs
 	return 0;
 }
