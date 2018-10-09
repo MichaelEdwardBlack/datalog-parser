@@ -36,27 +36,6 @@ string Parser::operators(vector<Token>& tokens) {
 	else return "";
 }
 
-string Parser::helperFunction(vector<Token>& tokens) {
-	Expression tempExpression;
-	string param1;
-	string theOp;
-	string param2;
-	if (tokens[currentToken].getType() == "ID") {
-		param1 = tokens[currentToken].getValue();
-		matchTerminal(Token::ID, tokens);
-		theOp = operators(tokens);
-		if (tokens[currentToken].getType() == "LEFT_PAREN") {
-			param2 = expression(tokens);
-		}
-		else if (tokens[currentToken].getType() == "ID") {
-			param2 = tokens[currentToken].getValue();
-			matchTerminal(Token::ID, tokens);
-		}
-	}
-	tempExpression = Expression(param1, theOp, param2);
-	return tempExpression.toString();
-}
-
 string Parser::expression(vector<Token>& tokens) {
 	Expression tempExpression;
 	string param1;
@@ -65,52 +44,28 @@ string Parser::expression(vector<Token>& tokens) {
 	matchTerminal(Token::LEFT_PAREN, tokens);
 	if (tokens[currentToken].getType() == "LEFT_PAREN") {
 		param1 = expression(tokens);
-		theOp = operators(tokens);
-		if (tokens[currentToken].getType() == "LEFT_PAREN") {
-			param2 = expression(tokens);
-		}
-		else if (tokens[currentToken].getType() == "ID") {
-			param2 = tokens[currentToken].getValue();
-			matchTerminal(Token::ID, tokens);
-		}
-		tempExpression = Expression(param1, theOp, param2);
-		matchTerminal(Token::RIGHT_PAREN, tokens);
-		return tempExpression.toString();
 	}
-	else if (tokens[currentToken].getType() == "ID") {
-		string ret = helperFunction(tokens);
-		matchTerminal(Token::RIGHT_PAREN, tokens);
-		return ret;
-	}
-	else return "ERROR";
-}
-void Parser::parameterNoDomain(vector<Token>& tokens) {
-	string param = tokens[currentToken].getValue();
-	if (tokens[currentToken].getType() == "STRING") {
-		currentParam.push_back(Parameter(true, tokens[currentToken].getType(), tokens[currentToken].getValue()));
-		matchTerminal(Token::STRING, tokens);
-	}
-	else if (tokens[currentToken].getType() == "ID") {
-		currentParam.push_back(Parameter(false, tokens[currentToken].getType(), tokens[currentToken].getValue()));
+	else {
+		param1 = tokens[currentToken].getValue();
 		matchTerminal(Token::ID, tokens);
 	}
-	else if (tokens[currentToken].getType() == "LEFT_PAREN") {
-		currentParam.push_back(Parameter(false, "expression", expression(tokens)));
+	theOp = operators(tokens);
+	if (tokens[currentToken].getType() == "LEFT_PAREN") {
+		param2 = expression(tokens);
 	}
-	else error();
-}
-void Parser::parameterListNoDomain(vector<Token>& tokens) {
-	if (tokens[currentToken].getType() == "COMMA") {
-		matchTerminal(Token::COMMA, tokens);
-		parameterNoDomain(tokens);
-		parameterListNoDomain(tokens);
+	else {
+		param2 = tokens[currentToken].getValue();
+		matchTerminal(Token::ID, tokens);
 	}
+	tempExpression = Expression(param1, theOp, param2);
+	matchTerminal(Token::RIGHT_PAREN, tokens);
+	return tempExpression.toString();
+
 }
 void Parser::parameter(vector<Token>& tokens) {
 	string param = tokens[currentToken].getValue();
 	if (tokens[currentToken].getType() == "STRING") {
 		currentParam.push_back(Parameter(true, tokens[currentToken].getType(), tokens[currentToken].getValue()));
-		domain.emplace(tokens[currentToken].getValue());
 		matchTerminal(Token::STRING, tokens);
 	}
 	else if (tokens[currentToken].getType() == "ID") {
@@ -148,38 +103,6 @@ void Parser::idList(vector<Token>& tokens) {
 			matchTerminal(Token::ID, tokens);
 			idList(tokens);
 		}
-	}
-}
-void Parser::predicateFact(vector<Token>& tokens) {
-	currentParam.clear();
-	parameter(tokens);
-	string currentName = currentParam.front().toString();
-	currentParam.clear();
-	matchTerminal(Token::LEFT_PAREN, tokens);
-	if (tokens[currentToken].getType() == "STRING") {
-		parameter(tokens);
-		stringList(tokens);
-		matchTerminal(Token::RIGHT_PAREN, tokens);
-		currentPred.push_back(Predicate(currentName, currentParam));
-	}
-	else error();
-}
-void Parser::predicateNoDomain(vector<Token>& tokens) {
-	currentParam.clear();
-	parameterNoDomain(tokens);
-	string currentName = currentParam.front().toString();
-	currentParam.clear();
-	matchTerminal(Token::LEFT_PAREN, tokens);
-	parameterNoDomain(tokens);
-	parameterListNoDomain(tokens);
-	matchTerminal(Token::RIGHT_PAREN, tokens);
-	currentPred.push_back(Predicate(currentName, currentParam));
-}
-void Parser::predicateListNoDomain(vector<Token>& tokens) {
-	if (tokens[currentToken].getType() == "COMMA") {
-		matchTerminal(Token::COMMA, tokens);
-		predicateNoDomain(tokens);
-		predicateListNoDomain(tokens);
 	}
 }
 void Parser::headPredicate(vector<Token>& tokens) {
@@ -232,9 +155,18 @@ void Parser::schemeList(vector<Token>& tokens) {
 }
 void Parser::fact(vector<Token>& tokens) {
 	currentPred.clear();
-	if (tokens[currentToken].getType() == "ID") {
-		predicateFact(tokens);
+	string factName = tokens[currentToken].getValue();
+	matchTerminal(Token::ID, tokens);
+	matchTerminal(Token::LEFT_PAREN, tokens);
+	if (tokens[currentToken].getType() == "STRING") {
+		currentParam.clear();
+		domain.emplace(tokens[currentToken].getValue());
+		parameter(tokens);
 	}
+	else error();
+	stringList(tokens);
+	matchTerminal(Token::RIGHT_PAREN, tokens);
+	currentPred.push_back(Predicate(factName, currentParam));
 	facts.push_back(currentPred[0]);
 	matchTerminal(Token::PERIOD, tokens);
 }
@@ -263,7 +195,7 @@ void Parser::ruleList(vector<Token>& tokens) {
 }
 void Parser::query(vector<Token>& tokens) {
 	currentPred.clear();
-	predicateNoDomain(tokens);
+	predicate(tokens);
 	if (currentPred.empty()) {
 		error();
 	}
