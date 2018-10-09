@@ -13,11 +13,8 @@ public:
 	void advance(vector<Token>& tokens);
 	void matchTerminal(Token::TOKEN_NUM token_type, vector<Token>& tokens);
 	string operators(vector<Token>& tokens);
-	string helperFunction(vector<Token>& tokens);
 	string expression(vector<Token>& tokens);
-	void parameterNoDomain(vector<Token>& tokens);
 	void parameter(vector<Token>& tokens);
-	void parameterListNoDomain(vector<Token>& tokens);
 	void parameterList(vector<Token>& tokens);
 	void stringList(vector<Token>& tokens);
 	void idList(vector<Token>& tokens);
