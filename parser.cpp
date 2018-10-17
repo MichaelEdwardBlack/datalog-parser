@@ -29,13 +29,11 @@ string Parser::operators(vector<Token>& tokens) {
 		matchTerminal(Token::ADD, tokens);
 		return "+";
 	}
-	else if (tokens[currentToken].getType() == "MULTIPLY") {
+	else {
 		matchTerminal(Token::MULTIPLY, tokens);
 		return "*";
 	}
-	else return "";
 }
-
 string Parser::expression(vector<Token>& tokens) {
 	Expression tempExpression;
 	string param1;
@@ -47,20 +45,31 @@ string Parser::expression(vector<Token>& tokens) {
 	}
 	else {
 		param1 = tokens[currentToken].getValue();
-		matchTerminal(Token::ID, tokens);
+		//should be able to take a string or id
+		if (tokens[currentToken].getType() == "ID") {
+			matchTerminal(Token::ID, tokens);
+		}
+		else if (tokens[currentToken].getType() == "STRING") {
+			matchTerminal(Token::STRING, tokens);
+		}
 	}
 	theOp = operators(tokens);
 	if (tokens[currentToken].getType() == "LEFT_PAREN") {
 		param2 = expression(tokens);
 	}
 	else {
+		//should be able to take a string or id
 		param2 = tokens[currentToken].getValue();
-		matchTerminal(Token::ID, tokens);
+		if(tokens[currentToken].getType() == "ID") {
+			matchTerminal(Token::ID, tokens);
+		}
+		else if (tokens[currentToken].getType() == "STRING") {
+			matchTerminal(Token::STRING, tokens);
+		}
 	}
 	tempExpression = Expression(param1, theOp, param2);
 	matchTerminal(Token::RIGHT_PAREN, tokens);
 	return tempExpression.toString();
-
 }
 void Parser::parameter(vector<Token>& tokens) {
 	string param = tokens[currentToken].getValue();
@@ -115,7 +124,7 @@ void Parser::headPredicate(vector<Token>& tokens) {
 		if (tokens[currentToken].getType() == "ID") {
 			parameter(tokens);
 		}
-		else error(); // THIS MIGHT CAUSE ERRORS!!! PLEASE CHECK TEST CASES FIRST!!!!!!!!!!!!!!
+		else error();
 		idList(tokens);
 		matchTerminal(Token::RIGHT_PAREN, tokens);
 		currentPred.push_back(Predicate(currentName, currentParam));
